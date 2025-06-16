@@ -1,6 +1,5 @@
 <?php
     include("database.php");
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -32,12 +31,24 @@
         } elseif (empty($password)){
             echo "Please enter a password!";
         } else{
-            $hash = password_hash($password, PASSWORD_DEFAULT);
-            $sql = "INSERT INTO users (user,password) VALUES ('$username', '$hash')";
-            mysqli_query($conn, $sql);
-            echo "You are now registered, $username!";
+            $check_sql = "SELECT * FROM users WHERE user = ?";
+            $stmt = mysqli_prepare($conn, $check_sql);
+            mysqli_stmt_bind_param($stmt, "s", $username);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_store_result($stmt);
+
+            if (mysqli_stmt_num_rows($stmt) > 0) {
+                echo "Username is already taken!";
+            } else {
+                $hash = password_hash($password, PASSWORD_DEFAULT);
+                $sql = "INSERT INTO users (user,password) VALUES (?,?)";
+                $stmt = mysqli_prepare($conn, $sql);
+                mysqli_stmt_bind_param($stmt, "ss", $username, $password);
+                mysqli_stmt_execute($stmt);
+                echo "You are now registered, $username!";
+            }
         }
     }
-    
+
     mysqli_close($conn);
 ?>
